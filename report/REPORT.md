@@ -44,11 +44,13 @@ Nguồn ảnh: KITTI Vision Benchmark Suite (CC BY-NC-SA 3.0); demo nuScenes (Mo
 
 ## 3. Failure case
 
-Nêu khi nào hệ thống hoặc phương pháp fail, vì sao fail, và liên hệ tới lớp nào trong 6 lớp debug: I/O, Geometry, Time, Preprocess, Model, Metric.
+![Geometry failure](../results/figures/fail_01_yaw_3deg_cyclist.png)
 
-![failure](../results/figures/fail_[ĐIỀN].png)
-
-[ĐIỀN]
+**What/when:** frame **000007**, object **#3 Cyclist** (index 0-based trong loader, bỏ DontCare), camera depth **34.09 m**, yaw **+3°**. **0/73** điểm baseline còn trong box (retention **0%**), median shift **44.21 px**.
+**Chọn có quy tắc:** tại yaw lớn nhất 3°, lấy retention nhỏ nhất; hòa thì ưu tiên số điểm baseline lớn hơn, rồi frame ID/index. Metadata thật nằm trong `results/failure_case.json`; không chọn ảnh bằng mắt.
+**Why / debug layer: Geometry.** Helper nhân phải `Tr @ D`, D quay quanh z-up trong hệ LiDAR. Positive yaw đẩy điểm forward về phía trái LiDAR, tương ứng dịch trái trên ảnh; góc nhỏ tạo dịch pixel đáng kể qua tỷ số x_cam/z_cam. 44 px đủ vượt bề rộng box cyclist, dù camera/LiDAR vẫn hoạt động.
+**Phát hiện:** theo dõi alignment score với camera detection, residual reprojection và tỷ lệ return khớp vùng object theo thời gian; báo động khi suy giảm kéo dài, đối chiếu phiên bản calibration và timestamp để tách lỗi Geometry/Time.
+**Khắc phục:** kiểm tra gá lắp sau va chạm/bảo dưỡng, đối chiếu transform reference, recalibrate extrinsic; giảm độ tin cậy hoặc tạm ngừng nhánh fusion nhạy với alignment khi health score dưới ngưỡng đã xác thực tại hệ thống.
 
 ## 4. Khuyến nghị nếu triển khai thật
 
@@ -68,6 +70,7 @@ python -m starter.projection --data-root data/synthetic --frame 000000
 python -m starter.projection --data-root data/kitti_mini --frame 000011
 python -m starter.projection --data-root data/nuscenes_mini_subset --frame scene-0103_010
 python src/calibration_qa.py --data-root data/kitti_mini --frames 000001 000004 000007 000008 000009 --yaw-deg 0 0.5 1 2 3 --seed 42 --output-csv results/yaw_perturb_sweep.csv --figure-dir results/figures
+python src/failure_case.py
 ```
 
 Sanity số học: (10,0,0) → z_cam=9.727321 m, pixel=(613.964149,175.006537). Đã kiểm tra NaN/Inf, depth âm, input rỗng và denominator=0; không tạo pixel hợp lệ giả.

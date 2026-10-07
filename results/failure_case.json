@@ -1,0 +1,14 @@
+{
+  "yaw_deg": "3",
+  "frame_id": "000007",
+  "object_index": "3",
+  "object_class": "Cyclist",
+  "baseline_points": "73",
+  "retained_points": "0",
+  "retention": "0.0",
+  "camera_depth_m": "34.09",
+  "median_pixel_shift_px": "44.20944281886531",
+  "seed": "42",
+  "selection_rule": "Largest tested yaw, lowest retention, then highest baseline count, frame ID, object index.",
+  "figure": "results/figures/fail_01_yaw_3deg_cyclist.png"
+}
