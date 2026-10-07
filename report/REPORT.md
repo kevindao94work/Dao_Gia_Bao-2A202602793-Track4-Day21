@@ -51,8 +51,15 @@ Use-case cụ thể (ADAS / robot / drone), trade-off và bước tiếp theo.
 Các lệnh tái tạo lại toàn bộ kết quả từ repo sạch.
 
 ```bash
-[ĐIỀN]
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install -r requirements.txt
+python -m starter.projection --data-root data/synthetic --frame 000000
+python -m starter.projection --data-root data/kitti_mini --frame 000011
+python -m starter.projection --data-root data/nuscenes_mini_subset --frame scene-0103_010
 ```
+
+Sanity số học: (10,0,0) → z_cam=9.727321 m, pixel=(613.964149,175.006537). Đã kiểm tra NaN/Inf, depth âm, input rỗng và denominator=0; không tạo pixel hợp lệ giả.
 
 ## 6. Khai báo sử dụng AI
 
