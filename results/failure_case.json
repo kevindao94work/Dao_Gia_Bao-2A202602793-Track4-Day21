@@ -1,5 +1,5 @@
 {
-  "yaw_deg": "3",
+  "yaw_deg": "3.0",
   "frame_id": "000007",
   "object_index": "3",
   "object_class": "Cyclist",

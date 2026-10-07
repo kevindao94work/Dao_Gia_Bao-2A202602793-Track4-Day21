@@ -1,6 +1,4 @@
-# Báo cáo Day 6: [ĐIỀN tên đề tài ngắn]
-
-> Thay **mọi** ô có chữ ĐIỀN nằm trong ngoặc vuông bằng nội dung của bạn, xoá luôn cả dấu ngoặc vuông. Lệnh `python tools/check_submission.py` sẽ báo FAIL nếu còn sót bất kỳ chỗ nào.
+# Báo cáo Day 6: Độ nhạy projection với yaw calibration drift
 
 - **Họ tên:** Dao Gia Bao (theo tên repo)
 - **MSSV:** 2A202602793
@@ -9,8 +7,6 @@
 - **Topic:** A — LiDAR-camera projection QA
 - **Dataset:** data/kitti_mini (định lượng); data/synthetic (sanity check)
 - **Các frame đã dùng:** KITTI đánh giá: 000001, 000004, 000007, 000008, 000009; synthetic: 000000–000004; demo bổ sung: KITTI 000011
-
-> Hãy viết ngắn: mỗi mục từ 3 đến 8 dòng, ưu tiên số liệu và hình ảnh.
 
 ## 1. Claim
 
@@ -54,9 +50,11 @@ Nguồn ảnh: KITTI Vision Benchmark Suite (CC BY-NC-SA 3.0); demo nuScenes (Mo
 
 ## 4. Khuyến nghị nếu triển khai thật
 
-Use-case cụ thể (ADAS / robot / drone), trade-off và bước tiếp theo.
-
-[ĐIỀN]
+**ADAS / xe tự hành:** calibration drift làm sai liên kết LiDAR-camera dù từng sensor vẫn trả dữ liệu; không nên tin fusion khi alignment health giảm kéo dài. Thí nghiệm này đo alignment proxy, không đo collision risk, AP hay detector recall.
+Monitoring online phải trả chi phí projection/matching; có thể kiểm tra theo chu kỳ hoặc ROI object để giảm compute, nhưng phải xác thực lại độ nhạy và tránh bỏ vật nhỏ/xa. Chưa đo latency trong bài nên không khẳng định tốc độ realtime.
+Log: timestamp, frame_id, số điểm hữu hạn/front, FOV ratio, alignment/retention proxy, pixel residual median/p95, timestamp và time offset camera/LiDAR, phiên bản calibration, trạng thái sensor/nhiệt độ nếu có, cảnh báo hệ thống.
+Ngoài thực tế không có calibration baseline và GT box ở mọi frame: dùng camera detection/edge và residual độc lập, đánh giá trên log đã kiểm tra; không dùng trực tiếp retention offline như thuật toán online hoàn chỉnh.
+Nếu lệch kéo dài: kiểm tra gá lắp và đồng bộ thời gian, recalibrate, giảm confidence hoặc khóa nhánh fusion nhạy với alignment. Ngưỡng và hysteresis cần đánh giá riêng trên hệ thống; 10% là ngưỡng hypothesis, không phải ngưỡng an toàn triển khai.
 
 ## 5. Cách chạy lại
 
@@ -66,19 +64,34 @@ Các lệnh tái tạo lại toàn bộ kết quả từ repo sạch.
 python -m venv .venv
 source .venv/bin/activate
 python -m pip install -r requirements.txt
+python tools/verify_data.py --data-root data/kitti_mini
+python tools/verify_data.py --data-root data/nuscenes_mini_subset
+python -m starter.data_health --data-root data/synthetic
 python -m starter.projection --data-root data/synthetic --frame 000000
 python -m starter.projection --data-root data/kitti_mini --frame 000011
 python -m starter.projection --data-root data/nuscenes_mini_subset --frame scene-0103_010
 python src/calibration_qa.py --data-root data/kitti_mini --frames 000001 000004 000007 000008 000009 --yaw-deg 0 0.5 1 2 3 --seed 42 --output-csv results/yaw_perturb_sweep.csv --figure-dir results/figures
 python src/failure_case.py
+python src/validate_results.py
+python src/presentation_pdf.py
+python tools/check_submission.py
+# Kiểm tra tái lập toàn bộ 3 CSV (output phụ theo cùng stem)
+python src/calibration_qa.py --frames 000001 000004 000007 000008 000009 --seed 42 --output-csv /tmp/day6_yaw_repeat.csv --figure-dir /tmp/day6_repeat_figures
+diff results/yaw_perturb_sweep.csv /tmp/day6_yaw_repeat.csv
+diff results/yaw_perturb_sweep_details.csv /tmp/day6_yaw_repeat_details.csv
+diff results/yaw_perturb_sweep_frames.csv /tmp/day6_yaw_repeat_frames.csv
 ```
+
+Slide một trang: `report/D06_2A202602793_A.pdf`, sinh từ CSV thật; ghi chú trình bày: `report/PRESENTATION_NOTES.md`. Môi trường đã chạy được ghi trong `results/environment.txt`; cài requirements dùng Python ≥3.10.
+
+Lịch sử checkpoint giữ nguyên hash gốc. Các lần git push HTTPS bị GitHub trả Internal Server Error; đã dùng GitHub Git API để upload đúng blob/tree/commit và cập nhật ref fast-forward với `force=false`. Không force-push hoặc viết lại commit. CSV dùng yaw float và LF thống nhất để CLI mặc định/tường minh cho cùng byte.
 
 Sanity số học: (10,0,0) → z_cam=9.727321 m, pixel=(613.964149,175.006537). Đã kiểm tra NaN/Inf, depth âm, input rỗng và denominator=0; không tạo pixel hợp lệ giả.
 
 ## 6. Khai báo sử dụng AI
 
-Ghi rõ đã dùng công cụ AI nào, dùng vào việc gì, và bạn đã tự kiểm chứng kết quả đó bằng cách nào. Nếu không dùng AI, ghi "Không sử dụng". Xem quy định ở `RULES.md` mục 2.
-
-| Công cụ | Dùng cho việc gì | Bạn đã kiểm chứng thế nào |
+| Công cụ | Dùng cho việc gì | Đã kiểm chứng thế nào |
 |---|---|---|
-| [ĐIỀN] | | |
+| OpenAI Codex | Đọc yêu cầu, triển khai projection/CLI, debug, vẽ plot, tổ chức REPORT/PDF | Chạy integrity check hai dataset; điểm (10,0,0); fixture pinhole tính tay; NaN/Inf/depth/FOV; yaw đúng hướng và không mutate; đối chiếu aggregate với số điểm integer; chạy benchmark hai lần và so cả ba CSV; xem ảnh demo/failure/plot và render PDF; chạy submission checker |
+
+Các kiểm tra trên được agent thực thi bằng lệnh thật. Không tuyên bố học viên đã tự kiểm tra thủ công: học viên cần đọc/hiểu code và tập trình bày, chịu trách nhiệm về bài nộp theo RULES.md. Không train model, không dùng số liệu/ảnh của học viên khác.

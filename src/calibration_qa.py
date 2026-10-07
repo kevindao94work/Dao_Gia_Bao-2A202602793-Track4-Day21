@@ -61,7 +61,7 @@ def write_csv(path, rows):
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)
     with path.open('w', newline='', encoding='utf-8') as file:
-        writer = csv.DictWriter(file, fieldnames=list(rows[0]))
+        writer = csv.DictWriter(file, fieldnames=list(rows[0]), lineterminator='\n')
         writer.writeheader()
         writer.writerows(rows)
 
@@ -147,7 +147,7 @@ def main():
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument('--data-root', default='data/kitti_mini')
     parser.add_argument('--frames', nargs='+', required=True, help='Frozen frame IDs, same at every yaw level')
-    parser.add_argument('--yaw-deg', nargs='+', type=float, default=[0, .5, 1, 2, 3], help='Absolute offsets from original calibration; must include 0')
+    parser.add_argument('--yaw-deg', nargs='+', type=float, default=[0., .5, 1., 2., 3.], help='Absolute offsets from original calibration; must include 0')
     parser.add_argument('--seed', type=int, default=42, help='Recorded seed; experiment uses every point, no sampling')
     parser.add_argument('--min-baseline-points', type=int, default=5)
     parser.add_argument('--output-csv', default='results/yaw_perturb_sweep.csv')
