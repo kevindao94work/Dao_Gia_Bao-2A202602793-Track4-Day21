@@ -6,17 +6,21 @@
 - **MSSV:** 2A202602793
 - **Lớp:** Chưa xác nhận trong metadata; cần học viên bổ sung
 - **Link repo:** https://github.com/kevindao94work/Dao_Gia_Bao-2A202602793-Track4-Day21
-- **Topic:** [ĐIỀN một chữ cái A/B/C/D/E/F] — [ĐIỀN tên topic]
-- **Dataset:** [ĐIỀN một hoặc nhiều trong: data/synthetic, data/kitti_mini, data/nuscenes_mini_subset, log riêng]
-- **Các frame đã dùng:** [ĐIỀN danh sách frame id, ví dụ 000011, 000049 hoặc scene-0103_010]
+- **Topic:** A — LiDAR-camera projection QA
+- **Dataset:** data/kitti_mini (định lượng); data/synthetic (sanity check)
+- **Các frame đã dùng:** KITTI đánh giá: 000001, 000004, 000007, 000008, 000009; synthetic: 000000–000004; demo bổ sung: KITTI 000011
 
 > Hãy viết ngắn: mỗi mục từ 3 đến 8 dòng, ưu tiên số liệu và hình ảnh.
 
 ## 1. Claim
 
-Một câu khẳng định kỹ thuật có thể kiểm chứng. Ví dụ: *"Lệch yaw 1° làm 12% điểm LiDAR rơi ra khỏi vật thể ở 30 m, phát hiện được bằng edge-alignment score với ngưỡng X."*
+**Giả thuyết CP1:** Sai lệch yaw extrinsic LiDAR-camera ít nhất 1° sẽ làm giảm mean retention của các điểm LiDAR liên kết với box 2D gốc ít nhất 10% so với calibration 0° trên các frame KITTI đã chọn.
 
-[ĐIỀN]
+Chốt trước khi chạy sweep: chọn 5 frame đầu tiên theo thứ tự ID có ảnh, LiDAR, calibration, label foreground và projection hợp lệ: **000001, 000004, 000007, 000008, 000009**.
+Chỉ xét Car/Pedestrian/Cyclist; bỏ DontCare; giữ object có ≥5 điểm chiếu trong box ở baseline (16 object). Ngưỡng không đổi theo yaw.
+Chỉ thay yaw **0°, 0.5°, 1°, 2°, 3°**; giữ frame, điểm, box, class, seed=42, roll/pitch/translation=0 và depth>0.1 m. Mỗi mức xuất phát từ calibration gốc.
+Retention từng object = số điểm trong tập chỉ số baseline vẫn nằm trong cùng box / kích thước tập baseline; mất FOV/depth tính là mất điểm. Mean/median tính trên object, mỗi object trọng số bằng nhau.
+Claim được hỗ trợ khi **mọi mức đã thử ≥1°** giảm ≥10% tương đối; không suy diễn cho mọi góc liên tục hoặc sensor khác. Chưa có kết quả ở CP1.
 
 ## 2. Evidence
 
