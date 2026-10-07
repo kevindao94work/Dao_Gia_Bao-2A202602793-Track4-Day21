@@ -1,0 +1,10 @@
+Python 3.12.7
+NumPy 1.26.4
+OpenCV 4.11.0
+Matplotlib 3.9.2
+pandas 2.2.2
+Local environment: .venv reuses installed Anaconda dependencies.
+Portable setup: python -m venv .venv; python -m pip install -r requirements.txt
+KITTI: 80/80 files verified against manifest.
+nuScenes: 173/173 files verified against manifest.
+Synthetic: five frames, about 0.1% invalid points, filtered in health statistics.
